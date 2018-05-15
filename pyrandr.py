@@ -246,7 +246,7 @@ parser.add_argument("--position",
                     choices=['left-of-laptop', 'right-of-laptop', 'above-laptop', 'below-laptop', 'center-of-laptop'],
                     help="define second screen position relative to laptop")
 parser.add_argument("--zoom", type=int, default=0,
-                    help="specify zoom factor for second screen")
+                    help="specify zoom factor for second screen (zoom in: 30, zoom out: -30)")
 parser.add_argument("-v", action='store_true',
                     help="print executed xrandr commands and more")
 parser.add_argument("-vv", action='store_true',
