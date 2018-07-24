@@ -23,7 +23,7 @@ usage
 # pyrandr --help
 usage: pyrandr.py [-h] [--laptop-only] [--external-only]
                   [--position {left-of-laptop,right-of-laptop,above-laptop,below-laptop,center-of-laptop}]
-                  [--zoom ZOOM] [-v] [-vv]
+                  [--zoom ZOOM] [--info] [-v] [-vv]
 
 Configure dualscreen
 
@@ -35,6 +35,7 @@ optional arguments:
                         define second screen position relative to laptop
   --zoom ZOOM           specify zoom factor for second screen (zoom in: 30,
                         zoom out: -30)
+  --info                show current configuration
   -v                    print executed xrandr commands and more
   -vv                   print executed xrandr commands and even more
 ```

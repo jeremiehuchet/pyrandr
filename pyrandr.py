@@ -235,7 +235,9 @@ class XRandr:
 
     def log( self ):
         for output in self.outputs.values():
-            logging.info(output)
+            logging.info( output )
+            current_position = output.get_relative_position( self.__primary() )
+            logging.debug( "%s position is %s laptop" % (output.name, current_position) )
             for mode in output.modes:
                 logging.debug(mode)
 
@@ -255,6 +257,8 @@ parser.add_argument("--position",
                     help="define second screen position relative to laptop")
 parser.add_argument("--zoom", type=int, default=0,
                     help="specify zoom factor for second screen (zoom in: 30, zoom out: -30)")
+parser.add_argument("--info", action='store_true',
+                    help="show current configuration")
 parser.add_argument("-v", action='store_true',
                     help="print executed xrandr commands and more")
 parser.add_argument("-vv", action='store_true',
@@ -270,7 +274,9 @@ if args.vv:
 xrandr = XRandr()
 xrandr.log()
 
-if args.laptop:
+if args.info:
+    exit( 0 )
+elif args.laptop:
     xrandr.only_primary()
 elif args.secondary:
     xrandr.only_secondary()
