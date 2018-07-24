@@ -159,6 +159,9 @@ class XRandr:
     def only_laptop( self ):
         self.__turn_on_only( PRIMARY_OUTPUT )
 
+    def only_secondary( self ):
+        self.__turn_on_only( self.__secondary().name )
+
     def __turn_on_only( self, wanted_output ):
         """
         Executes `xrandr` command to turn off all outputs but the given one.
@@ -245,6 +248,8 @@ class XRandr:
 parser = argparse.ArgumentParser(description='Configure dualscreen')
 parser.add_argument("--laptop-only", dest='laptop', action='store_true',
                     help="disable second screen")
+parser.add_argument("--external-only", dest='secondary', action='store_true',
+                    help="disable laptop")
 parser.add_argument("--position",
                     choices=['left-of-laptop', 'right-of-laptop', 'above-laptop', 'below-laptop', 'center-of-laptop'],
                     help="define second screen position relative to laptop")
@@ -267,6 +272,8 @@ xrandr.log()
 
 if args.laptop:
     xrandr.only_primary()
+elif args.secondary:
+    xrandr.only_secondary()
 else:
     pos = None
     if args.position:
