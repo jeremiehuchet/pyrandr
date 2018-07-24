@@ -281,7 +281,7 @@ xrandr.log()
 if args.info:
     exit( 0 )
 elif args.laptop:
-    xrandr.only_primary()
+    xrandr.only_laptop()
 elif args.secondary:
     xrandr.only_secondary()
 else:
