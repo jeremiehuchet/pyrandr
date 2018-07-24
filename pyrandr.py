@@ -9,7 +9,6 @@ import math
 import subprocess
 
 PRIMARY_OUTPUT = 'eDP1'
-SECONDARY_OUTPUTS = [ 'HDMI3' ]
 
 def run(cmd):
     logging.info(cmd)
@@ -145,10 +144,10 @@ class XRandr:
                     '+' in line, '*' in line
                 ))
 
-    def primary( self ):
+    def __primary( self ):
         return self.outputs[PRIMARY_OUTPUT]
 
-    def secondary( self ):
+    def __secondary( self ):
         """
         Find a connected secondary output.
         Returns the output details or `None`.
@@ -173,9 +172,9 @@ class XRandr:
         - positions the secondary screen
         - apply scale factor
         """
-        s = self.secondary()
+        s = self.__secondary()
         if not position:
-            position = s.get_relative_position(self.primary())
+            position = s.get_relative_position(self.__primary())
         scale = self.__get_scale_factor(zoom)
         if position in [ 'left-of', 'above' ]:
             self.__position_complex(position, scale)
@@ -185,7 +184,7 @@ class XRandr:
             self.__position_over_laptop(scale)
 
     def __get_scale_factor( self, zoom ):
-        s = self.secondary()
+        s = self.__secondary()
         current_scale = 1 if not s else s.get_scale()
         factor = 0.99 if zoom > 0 else 1.01
         new_scale = current_scale
@@ -195,18 +194,19 @@ class XRandr:
 
     def __position_easy( self, position, scale):
         cmd = "xrandr --output {primary} --auto --output {secondary} --auto --scale {scale}x{scale} --{pos} {primary}".format(
-                primary=PRIMARY_OUTPUT,
-                secondary=self.secondary().name,
+                primary=self.__primary().name,
+                secondary=self.__secondary().name,
                 scale=scale,
                 pos=position
         )
         run(cmd)
 
     def __position_complex( self, position, scale ):
-        s = self.secondary()
+        p = self.__primary()
+        s = self.__secondary()
         s_mode = s.get_current_mode() or s.get_prefered_mode()
         cmd = "xrandr --output {secondary} --auto --scale {scale}x{scale} --pos 0x0 --output {primary} --auto --pos {primary_x}x{primary_y}".format(
-                primary=PRIMARY_OUTPUT,
+                primary=p.name,
                 secondary=s.name,
                 scale=scale,
                 primary_x=int(math.ceil(s_mode.width * scale)) if position == 'left-of' else 0,
@@ -215,11 +215,11 @@ class XRandr:
         run(cmd)
 
     def __position_over_laptop( self, scale ):
-        p = self.primary()
-        s = self.secondary()
+        p = self.__primary()
+        s = self.__secondary()
         s_mode = s.get_current_mode() or s.get_prefered_mode()
         cmd = "xrandr --output {primary} --auto --pos 0x0 --output {secondary} --auto --scale {scale}x{scale} --pos {secondary_x}x{secondary_y}".format(
-                primary=PRIMARY_OUTPUT,
+                primary=p.name,
                 secondary=s.name,
                 scale=scale,
                 secondary_x=int((p.size_x - s_mode.width * scale) / 2),
