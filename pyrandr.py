@@ -43,6 +43,10 @@ class Output:
         """
         return the the position of this output relative to the given output
         """
+        if self.__is_left_of( other ) and self.__is_right_of( other ):
+            return 'center-of'
+        if self.__is_above( other ) and self.__is_below( other ):
+            return 'center-of'
         if self.__is_left_of( other ):
             return 'left-of'
         if self.__is_right_of( other ):
@@ -69,13 +73,13 @@ class Output:
         return self.__get_right() <= output.__get_left()
 
     def __is_right_of( self, output ):
-        return self.__get_left() <= output.__get_right()
+        return self.__get_left() >= output.__get_right()
 
     def __is_above( self, output ):
         return self.__get_bottom() <= output.__get_top()
 
     def __is_below( self, output ):
-        return self.__get_top() <= output.__get_bottom()
+        return self.__get_top() >= output.__get_bottom()
 
     def get_scale( self ):
         """
