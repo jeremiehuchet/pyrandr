@@ -8,7 +8,9 @@ import logging
 import math
 import subprocess
 
-PRIMARY_OUTPUT = 'eDP1'
+def fail(message):
+    logging.error(message)
+    exit(1)
 
 def run(cmd):
     logging.info(cmd)
@@ -118,17 +120,22 @@ class XRandr:
         """
         xrandr_output = subprocess.check_output("xrandr").decode()
         self.outputs = dict()
+        self.primary = None
 
         name = None
         for line in xrandr_output.splitlines():
-            match = search('^(\w+) disconnected ', line)
+            logging.debug('xrandr output: %s' % line)
+
+            match = search('^([\w-]+) disconnected ', line)
             if (match):
                 name = match.group(1)
+                logging.debug('register disconnected output named "%s"' % name)
                 self.outputs[name] = Output( name, False)
 
-            match = search('^(\w+) connected.* (\d+)x(\d+)\+(\d+)\+(\d+)', line)
+            match = search('^([\w-]+) connected.* (\d+)x(\d+)\+(\d+)\+(\d+)', line)
             if (match):
                 name = match.group(1)
+                logging.debug('register connected output named "%s"' % name)
                 self.outputs[name] = Output(
                     name,
                     True,
@@ -136,32 +143,40 @@ class XRandr:
                     match.group(4), match.group(5)
                 )
             else:
-                match = search('^(\w+) connected .*[(]', line)
+                match = search('^([\w-]+) connected .*[(]', line)
                 if (match):
+                    logging.debug('register connected output named "%s"' % name)
                     name = match.group(1)
                     self.outputs[name] = Output(name, True)
 
+            if search(' primary ', line):
+                logging.debug('set primary output to "%s"' % name)
+                self.primary = name
+
             match = search('^\s+(\d+)x(\d+)\w?(?:\s+\d+\.\d+)+', line)
             if (match):
-                self.outputs[name].modes.append(Mode(
+               logging.debug('add mode for output named "%s"' % name)
+               self.outputs[name].modes.append(Mode(
                     match.group(1),  match.group(2),
                     '+' in line, '*' in line
                 ))
 
     def __primary( self ):
-        return self.outputs[PRIMARY_OUTPUT]
+        if not self.primary:
+            fail("No primary output detected. See xrandr option --primary.")
+        return self.outputs[self.primary]
 
     def __secondary( self ):
         """
         Find a connected secondary output.
         Returns the output details or `None`.
         """
-        secondaries = filter(lambda o: not o.name == PRIMARY_OUTPUT, list(self.outputs.values()))
+        secondaries = filter(lambda o: not o == self.__primary(), list(self.outputs.values()))
         connected = filter(lambda o: o.connected, secondaries)
         return next(connected, None)
 
     def only_laptop( self ):
-        self.__turn_on_only( PRIMARY_OUTPUT )
+        self.__turn_on_only( self.__primary().name )
 
     def only_secondary( self ):
         self.__turn_on_only( self.__secondary().name )
@@ -215,7 +230,7 @@ class XRandr:
         p = self.__primary()
         s = self.__secondary()
         s_mode = s.get_current_mode() or s.get_prefered_mode()
-        cmd = "xrandr --output {secondary} --auto --scale {scale}x{scale} --pos 0x0 --output {primary} --auto --pos {primary_x}x{primary_y}".format(
+        cmd = "xrandr --output {secondary} --auto --scale {scale}x{scale} --pos 0x0 --output {primary} --auto --primary --pos {primary_x}x{primary_y}".format(
                 primary=p.name,
                 secondary=s.name,
                 scale=scale,
